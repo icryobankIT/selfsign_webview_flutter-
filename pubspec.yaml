@@ -1,0 +1,28 @@
+name: selfsign_webview_flutter
+description: A Flutter plugin that wraps a hardened WebView for e-signature pages on Android and iOS, with file/camera upload, permission handling, SSL dialog, JS bridge callbacks and back-press confirmation.
+version: 0.1.0
+homepage: https://example.com/selfsign_webview_flutter
+repository: https://example.com/selfsign_webview_flutter
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.10.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.1.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.selfsign.webview.selfsign_webview_flutter
+        pluginClass: SelfsignWebviewFlutterPlugin
+      ios:
+        pluginClass: SelfsignWebviewFlutterPlugin
