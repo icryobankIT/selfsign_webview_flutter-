@@ -23,21 +23,19 @@ allprojects {
 
 apply plugin: 'com.android.library'
 
-// ── AGP 9 built-in Kotlin 相容（愛生育 App fork 新增）──────────────────────────
-// AGP 9 起 Kotlin 編譯可由 AGP 自己提供（built-in Kotlin）。此時若再 apply KGP，
-// AGP 會直接硬失敗：「Remove the 'org.jetbrains.kotlin.android' plugin from this
-// project's build file」。但 Flutter 的 migrator 可能把 android.builtInKotlin 設為
-// false（本專案目前就是），那時仍必須自行 apply KGP，否則這個模組的 .kt 完全不會
-// 被編譯 —— 症狀是宿主 app 的 GeneratedPluginRegistrant.java 報 cannot find symbol。
-// 判斷式與 firebase_performance 0.11.4+2 的官方寫法一致。
-def agpMajor = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.tokenize('.')[0] as int
-def builtInKotlin = providers.gradleProperty("android.builtInKotlin")
-        .map { it.toBoolean() }
-        .orElse(agpMajor >= 9)
-        .get()
-if (agpMajor < 9 || !builtInKotlin) {
-    apply plugin: 'kotlin-android'
-}
+// ── Built-in Kotlin 遷移（愛生育 App fork）────────────────────────────────────
+// 本模組**不再套用 KGP**，Kotlin 由 AGP 9 的 built-in Kotlin 編譯。
+// 這是 Flutter 對 plugin 作者的正式指引（migrate-to-built-in-kotlin/for-plugin-authors）。
+//
+// 為什麼連「有條件套用」都不留：Flutter 的 FlutterPluginUtils 是用**正則比對
+// build script 的字面文字**來判斷一個 plugin 有沒有套用 KGP（其原始碼註解明說刻意
+// 不查執行期狀態，因為動態判斷會有 Gradle 生命週期問題）。只要檔案裡出現行首的
+// KGP 宣告，即使被包在永遠不成立的 if 裡，仍會被列進警告名單。
+// 要真正消除，就必須讓那行宣告消失，而不是讓它不執行。
+//
+// ⚠️ 因此本 fork 要求 **AGP >= 9，且 gradle.properties 的 built-in Kotlin 開關為 true**。
+//    愛生育 App 兩者皆成立。若未來在該開關為 false 的環境使用本 fork，.kt 將完全
+//    不會被編譯，症狀是宿主 app 的 GeneratedPluginRegistrant.java 報 cannot find symbol。
 
 android {
     namespace 'com.selfsign.webview.selfsign_webview_flutter'
@@ -46,15 +44,6 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    // kotlinOptions 是 KGP 掛在 android {} 上的擴充；AGP 9.0 已移除
-    // android.kotlinOptions，走 built-in Kotlin 時沒有這個區塊，寫了會
-    // Unresolved reference。built-in Kotlin 會自動對齊 compileOptions 的 Java target。
-    if (agpMajor < 9 || !builtInKotlin) {
-        kotlinOptions {
-            jvmTarget = '1.8'
-        }
     }
 
     sourceSets {
